@@ -1,25 +1,23 @@
-import React, {Component} from 'react';
+import { memo, useCallback } from 'react';
 import './TodoItem.css';
 
-class TodoItem extends Component {
-    render() {
-        const {text, checked, id, onToggle, onRemove} = this.props;
+const TodoItem = (props) => {
+  const { text, checked, id, onToggle, onRemove } = props;
+  
+  const handleRemove = useCallback((e) => {
+    e.stopPropagation();
+    onRemove(id);
+  }, [id, onRemove]);
 
-        return (
-            <div className="todo-item" onClick={() => onToggle(id)}>
-                <div className="remove" onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove(id)
-                }}> &times; </div>
-                <div className={`todo-text ${checked && 'checked'}`}>
-                    <div>{text}</div>
-                </div>
-                {
-                    checked && (<div className="check-mark">✓</div>)
-                }
-            </div>
-        );
-    }
+  return (
+    <div className="todo-item" onClick={() => onToggle(id)}>
+    <div className="remove" onClick={handleRemove}> &times; </div>
+    <div className={`todo-text ${checked && 'checked'}`}>
+      <div>{text}</div>
+    </div>
+    { checked && (<div className="check-mark">✓</div>) }
+    </div>
+  );
 }
-
-export default TodoItem;
+  
+  export default memo(TodoItem);
