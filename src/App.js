@@ -1,40 +1,39 @@
-import React, {Component} from 'react';
+import { useCallback, memo, useState } from 'react';
 import TodoListTemplate from './components/TodoListTemplate'
 import Form from './components/Form'
 import TodoItemList from './components/TodoItemList'
 
-class App extends Component {
-  
-  id = 0;
-  state = {
-    input: '',
-    todos: []
-  }
-  handleChange = (e) => {
-    this.setState({
-      input: e.target.value
-    });
-  }
+let id = 0;
 
-  handleCreate = () => {
-    const { input, todos } = this.state;
-    this.setState({
-      input: '',
-      todos: todos.concat({
-        id: this.id++,
-        text: input,
-        checked: false
-      })
-    });
-  }
+// reactNode 를 반환하는 함수인 거임
+const App = () => {
+  const [input, setInput] = useState('');
+  const [todos, setTodos] = useState([]);
 
-  handleKeyPress = (e) => {
+  const handleChange = useCallback((e) => {
+    setInput(e.target.value);
+  }, []);
+
+  const handleRemove = useCallback((id) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  }, [todos]);
+
+  const handleCreate = useCallback(() => {
+    setInput('');
+    setTodos(todos.concat({
+      id: id++,
+      text: input,
+      checked: false
+    }));
+  }, [todos, input]);
+
+  const handleKeyPress = useCallback((e) => {
     if(e.key === 'Enter') {
-      this.handleCreate();
+      handleCreate();
     }
-  }
-  handleToggle = (id) => {
-    const { todos } = this.state;
+  }, [handleCreate]);
+
+  const handleToggle = useCallback((id) => {
     const index = todos.findIndex(todo => todo.id === id);
     const selected = todos[index];
 
@@ -45,40 +44,25 @@ class App extends Component {
       checked: !selected.checked
     };
 
-    this.setState({
-      todos: nextTodos
-    });
-  }
+    setTodos(nextTodos);
+  }, [todos]);
 
-  handleRemove = (id) => {
-    const { todos } = this.state;
-    this.setState({
-      todos: todos.filter(todo => todo.id !== id)
-    });
-  }
-  
-  
-  render() {
-    const { input, todos } = this.state;
-    const {
-      handleChange,
-      handleCreate,
-      handleKeyPress,
-      handleToggle,
-      handleRemove
-    } = this;
-    return (
-      <TodoListTemplate form={(
-      <Form
-        value={input}
-        onKeyPress={handleKeyPress}
-        onChange={handleChange}
-        onCreate={handleCreate}
-      />)}>
-        <TodoItemList todos={todos} onToggle={handleToggle} onRemove={handleRemove}/>
-      </TodoListTemplate>
-    );
-  }
-}
+  // 얘 어차피 무조건 input이든 todo든 바뀌면 렌더링되니까 굳이 메모리에 안올려놓음
+  // 예전값이랑 비교하면 무조건 false임 (계속 ReactNode 새로 만들어야됨)
+  const todoListForm = (
+    <Form
+      value={input}
+      onKeyPress={handleKeyPress}
+      onChange={handleChange}
+      onCreate={handleCreate}
+    />
+  );
 
-export default App;
+  return (
+    <TodoListTemplate form={todoListForm}>
+      <TodoItemList todos={todos} onToggle={handleToggle} onRemove={handleRemove}/>
+    </TodoListTemplate>
+  );
+};
+
+export default memo(App);
